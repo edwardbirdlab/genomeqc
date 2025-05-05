@@ -138,6 +138,7 @@ workflow GENOMEQC {
     ch_input      = ch_fasta // channel: [ val(meta), val(fasta), val(gxf), val(fastq) ]
                   | combine(ch_gxf, by:0) // by:0 | Only combine when both channels share the same id
                   | combine(ch_fastq, by:0)
+    ch_input.view()
 
     // Split into two channels according to the presence/absence of an annotation
     ch_input_anno = ch_input.filter { meta, fasta, gxf, fastq ->  gxf } // gxf is present. Channel will run on genome and annotation
