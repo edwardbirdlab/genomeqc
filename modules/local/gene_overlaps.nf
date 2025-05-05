@@ -7,8 +7,8 @@ process GENE_OVERLAPS {
     tuple val(meta), path(gff)
 
     output:
-    tuple val(meta), path("Summary.*.tsv"), emit: overlap_detailed_summary
-    tuple val(meta), path("Count.*.tsv"), emit: overlap_counts
+    tuple val(meta), path("*.summary.tsv"), emit: overlap_detailed_summary
+    tuple val(meta), path("*.counts.tsv")  , emit: overlap_counts
     path "versions.yml", emit: versions
 
     when:
@@ -18,7 +18,7 @@ process GENE_OVERLAPS {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     #Run overlap R script
-    gene_overlaps.R $gff Summary.${prefix}.tsv Count.${prefix}.tsv
+    gene_overlaps.R $gff ${prefix}.summary.tsv ${prefix}.counts.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

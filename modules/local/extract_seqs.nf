@@ -10,7 +10,7 @@ process EXTRACT_SEQS {
     tuple val (meta),  path(gff)
 
     output:
-    tuple val (meta), path( "${meta.id}.prot.fasta" ), emit: prot_fasta
+    tuple val (meta), path( "*.prot.fasta" ), emit: prot_fasta
     path "versions.yml"                              , emit: versions
 
     script:

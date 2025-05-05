@@ -27,26 +27,3 @@ head(karyotype)
 
 write.table(karyotype, file = paste0(out_name, "_karyotype.txt"), quote = FALSE, row.names = FALSE, col.names = TRUE, sep = "\t")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,4 +1,4 @@
-# ecoflow/genomeqc: Usage
+# nf-core/genomeqc: Usage
 
 > _Documentation of pipeline parameters is generated automatically from the pipeline schema and can no longer be found in markdown files._
 
@@ -6,47 +6,70 @@
 
 <!-- TODO nf-core: Add documentation about anything specific to running your pipeline. For general topics, please point to (and add to) the main nf-core website. -->
 
+**nf-core/genomeqc** is a pipeline build to aid in the diagnosis of the quality of genome assemblies. It inputs several genomes and/or their annotations, and generates metrics such as completness, contiguity, GC% or number of overlapping genes, which can be later used to assess their quality. Additionally, if both genome and annotation are provided, it will output a phylogenetic tree with the summary metrics. The tree building method uses orthologous genes for a quick comparision of metrics among species/samples. This pipeline should not be used for phylogenetic inference.
+
 ## Samplesheet input
 
-You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
+Before running the pipeline, you will need to create a samplesheet with information about the samples you would like to analyse. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row as shown in the examples below.
 
 ```bash
 --input '[path to samplesheet file]'
 ```
 
-### Multiple runs of the same sample
+The pipeline can be ran using ncbi accessions (RefSeq of GenBank) or local files. It needs at least a **fasta** (GenBank accession or local fasta) file per species to run. If annotations (RefSeq accession or local gtf/gff) are added, the pipeline will run on both **genomes and annotations**. Additionally, if a reads (local fastq) are provided, it will run Merqury.
 
-The `sample` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. The pipeline will concatenate the raw reads before performing any downstream analysis. Below is an example for the same sample sequenced across 3 lanes:
-
-```csv title="samplesheet.csv"
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L003_R1_001.fastq.gz,AEG588A1_S1_L003_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L004_R1_001.fastq.gz,AEG588A1_S1_L004_R2_001.fastq.gz
-```
-
-### Full samplesheet
-
-The pipeline will auto-detect whether a sample is single- or paired-end using the information provided in the samplesheet. The samplesheet can have as many columns as you desire, however, there is a strict requirement for the first 3 columns to match those defined in the table below.
-
-A final samplesheet file consisting of both single- and paired-end data may look something like the one below. This is for 6 samples, where `TREATMENT_REP3` has been sequenced twice.
+If running the pipeline on **local** files, point to the location these files using the **fasta** and/or **gxf** fields:
 
 ```csv title="samplesheet.csv"
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP2,AEG588A2_S2_L002_R1_001.fastq.gz,AEG588A2_S2_L002_R2_001.fastq.gz
-CONTROL_REP3,AEG588A3_S3_L002_R1_001.fastq.gz,AEG588A3_S3_L002_R2_001.fastq.gz
-TREATMENT_REP1,AEG588A4_S4_L003_R1_001.fastq.gz,
-TREATMENT_REP2,AEG588A5_S5_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L004_R1_001.fastq.gz,
+species,ncbi,fasta,gxf,fastq
+species_1,,/path/to/genome.fasta,/path/to/annotation.gxf,
+species_2,,/path/to/genome.fasta,/path/to/annotation.gxf,
+species_3,,/path/to/genome.fasta,/path/to/annotation.gxf,
 ```
+
+If running the pipeline using **ncbi acessions (GenBank and/or RefSeq)**, indicate the corresponding ID using the **ncbi** field:
+
+```csv title="samplesheet.csv"
+species,ncbi,fasta,gxf,fastq
+species_1,GCF_000000001.1,,,
+species_2,GCF_000000002.1,,,
+species_3,GCF_000000003.1,,,
+```
+
+If running with **Merqury**, you must point to the location of fastq files using the **fastq** field:
+
+```csv title="samplesheet.csv"
+species,ncbi,fasta,gxf,fastq
+species_1,,/path/to/genome.fasta,/path/to/annotation.gxf,/path/to/reads.fastq
+species_2,,/path/to/genome.fasta,/path/to/annotation.gxf,/path/to/reads.fastq
+species_3,,/path/to/genome.fasta,/path/to/annotation.gxf,/path/to/reads.fastq
+```
+
+You can mix different different input types in the same samplesheet. The pipeline will detect the input type for each species and run accordingly:
+
+```csv title="samplesheet.csv"
+species,ncbi,fasta,gxf,fastq
+species_1,,/path/to/genome.fasta,/path/to/annotation.gxf,/path/to/reads.fastq
+species_2,,/path/to/genome.fasta,/path/to/annotation.gxf,
+species_3,,/path/to/genome.fasta,/path/to/annotation.gxf,
+species_4,,/path/to/genome.fasta,,/path/to/reads.fastq
+species_5,,/path/to/genome.fasta,,
+species_6,,/path/to/genome.fassta,,
+species_7,GCF_000000007.1,,,/path/to/reads.fastq
+species_8,GCF_000000008.1,,,
+species_9,GCA_000000009.1,,,/path/to/reads.fastq
+species_10,GCA_000000010.1,,,
+```
+
+As for now, the pipeline doesn't support SRA accession for **Merqury**. We will consider this option  the future.
 
 | Column    | Description                                                                                                                                                                            |
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sample`  | Custom sample name. This entry will be identical for multiple sequencing libraries/runs from the same sample. Spaces in sample names are automatically converted to underscores (`_`). |
-| `fastq_1` | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
-| `fastq_2` | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
+| `species`  | Species name or custom sample name. Spaces in sample names are automatically converted to underscores (`_`) (not sure if this is an option right now). |
+| `ncbi` | ncbi acession. Can be GenBank (starts with "GCA") or RefSeq (starts with "GCF").                                                             |
+| `fasta` | Full path to the genome fasta file. Can be compressed or uncompressed.                                                             |
+| `gxf` | Full path to the genome annotation gff/gtf file. Can be compressed or uncompressed.                                                             |
+| `fastq` | Full path to FastQ file for long reads (e.g. PacBio or ONT). File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 
@@ -55,7 +78,7 @@ An [example samplesheet](../assets/samplesheet.csv) has been provided with the p
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run ecoflow/genomeqc --input ./samplesheet.csv --outdir ./results --genome GRCh37 -profile docker
+nextflow run nf-core/genomeqc --input ./samplesheet.csv --outdir ./results -profile docker
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
@@ -88,11 +111,46 @@ with `params.yaml` containing:
 ```yaml
 input: './samplesheet.csv'
 outdir: './results/'
-genome: 'GRCh37'
 <...>
 ```
 
 You can also generate such `YAML`/`JSON` files via [nf-core/launch](https://nf-co.re/launch).
+
+### Modes
+
+#### Genome only
+
+This is the minimal run. The pipeline will run on genome only mode if these inputs are provided in the samplesheet:
+
+1. Path to **fasta** OR
+2. **ncbi** GenaBank accession.
+
+The pipeline will produce a MultiQC report.
+
+#### Genome and annotation
+
+The pipeline will run on genome and annotation mode if these inputs are provided in the samplesheet:
+
+1. Path to **fasta** AND
+2. Path to **gxf** OR
+3. **ncbi** RefSeq accession.
+
+The pipeline will produce a tree plot summary alonside a MultiQC report.
+
+### Running with Merqury
+
+Users can also run the pipeline using Merqury by supplying the path to sequencing reads under the **fastq** field. Merqury needs both **fasta** and **fastq** to run. Refer the [GitHub page](https://github.com/marbl/merqury) for more information on Merqury.
+
+### Running tests
+
+The pipeline can be ran using different test profiles:
+
+1. `-profile test` Will run on genome and annotation and Merqury using **RefSeq accessions** and local **fastqs**.
+3. `-profile test_local` Will run on genome and annotation on local files (**fasta** and **gxf**).
+4. `-profile test_genomeonly` Will run genome only on local files (**fasta**).
+5. `-profile test_nofastq` Will run genome and annotation using **RefSeq accessions**.
+
+Test files are stored in the genomeqc branch of the [test-dataset repository](https://github.com/nf-core/test-datasets/tree/genomeqc).
 
 ### Updating the pipeline
 

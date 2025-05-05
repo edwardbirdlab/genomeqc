@@ -11,7 +11,7 @@ process CREATE_PATH {
     tuple val(meta), val(accession)
 
     output:
-    tuple val (meta), path("${meta.id}.txt"), emit: accession
+    tuple val (meta), path("*.txt"), emit: accession
 
     when:
     task.ext.when == null || task.ext.when
@@ -20,5 +20,5 @@ process CREATE_PATH {
     def prefix         = task.ext.prefix ?: "${meta.id}"
     """
     echo $accession > ${prefix}.txt
-    """ 
+    """
 }
