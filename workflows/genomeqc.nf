@@ -200,10 +200,6 @@ workflow GENOMEQC {
     ch_versions                             = ch_versions.mix(MERQURY_MERQURY.out.versions.first())
 
     // Run genome only or genome + gxf
-
-
-    ch_input.view()
-
     if (params.genome_only) {
         GENOME_ONLY (
             ch_input.fasta
